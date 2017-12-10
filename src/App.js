@@ -155,7 +155,20 @@ class App extends Component {
 
     this.search = this.search.bind(this);
 
-    this.search("nmd")
+    this.refreshWishlist()
+    this.search(this.props.match.params.query ? this.props.match.params.query : "nmd" )
+  }
+
+  refreshWishlist() {
+    console.log("Refreshing wishlist...")
+    fetch('/api/wishlist', {method: 'GET',
+        credentials: 'same-origin'
+      })
+      .then(data => data.json())
+      .then(parsedData => {
+        console.log("Wishlist: " + JSON.stringify(parsedData))
+        this.setState({wishedItems: parsedData})
+      })
   }
 
   search(query) {
@@ -176,15 +189,27 @@ class App extends Component {
     const productId = product.productId
     const hasItem = this.state.wishedItems.filter( (o) => o.productId == product.productId ).length > 0
     if (!hasItem) {
-      this.setState({wishedItems: this.state.wishedItems.concat(product)}, () => console.log(this.state) )
-      console.log(product)
+      fetch('/api/wishlist', {method: 'POST',
+          credentials: 'same-origin',
+          body: JSON.stringify(product),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(parsedData => {
+          console.log("Good! " + parsedData)
+          this.refreshWishlist()
+        })
     }
   }
 
   removeFromWishlist(product) {
     const productId = product.productId
-    const newWishlist = this.state.wishedItems.filter(o => o.productId != productId)
-    this.setState({wishedItems: newWishlist})
+    fetch('/api/wishlist/' + productId, {method: 'DELETE',
+        credentials: 'same-origin'
+      })
+      .then(parsedData => {
+        console.log("Good! " + parsedData)
+        this.refreshWishlist()
+      })
   }
 
   render() {
