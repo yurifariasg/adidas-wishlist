@@ -18,7 +18,7 @@ function extractIdFromUrl(url) {
 class SearchField extends Component {
     constructor(props) {
     super(props);
-    this.state = {value: ''};
+    this.state = {value: this.props.defaultValue ? this.props.defaultValue : ''};
 
     this.submitHandler = props.onSubmit
     this.handleChange = this.handleChange.bind(this);
@@ -234,7 +234,7 @@ class App extends Component {
                        Get started by typing something on the search field below
                     </p>
 
-                    <SearchField onSubmit={this.search} />
+                    <SearchField defaultValue={this.props.match.params.query} onSubmit={this.search} />
                 </div>
             </div>
             <div className="App-intro">
@@ -243,7 +243,7 @@ class App extends Component {
           </div>
           <div className="col-md-4">
             <div className="widget">
-                <h3 className="text-center">Wishlist</h3>
+                <h3 className="text-center">wishlist</h3>
                 <Wishlist items={this.state.wishedItems} removeFromWishlist={this.removeFromWishlist} />
             </div>
           </div>
