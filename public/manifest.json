@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Adidas Wishlist",
+  "name": "A simple ReactJS Sample App to create a wishlist of adidas products",
   "icons": [
     {
       "src": "favicon.ico",
