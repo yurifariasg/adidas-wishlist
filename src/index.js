@@ -12,7 +12,7 @@ ReactDOM.render(
   <BrowserRouter>
     <div>
       <Route path='/:query' component={App} />
-      <Route path='/' component={App} />
+      <Route exact path='/' component={App} />
     </div>
   </BrowserRouter>,
   document.getElementById('root')

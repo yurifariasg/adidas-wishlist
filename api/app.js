@@ -1,7 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
 const app = express()
@@ -11,22 +10,21 @@ const wishlists = require('./wishlist.js')
 // Setup logger
 app.use(morgan(':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] :response-time ms'));
 
-app.use(cookieParser())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
 // Serve static assets
 app.use(express.static(path.resolve(__dirname, '..', 'build')));
 
-app.get('/api/wishlist', (req, res) => {
-  const wishlistid = getOrCreateWishlistid(req, res)
+app.get('/api/wishlist/:wishlistid', (req, res) => {
+  const wishlistid = req.params.wishlistid
   if (wishlistid != undefined) {
-    res.json(Object.values(wishlists.getWishlist(req.cookies.wishlistid)))
+    res.json(Object.values(wishlists.getWishlist(wishlistid)))
   }
 })
 
-app.post('/api/wishlist', (req, res) => {
-  const wishlistid = getOrCreateWishlistid(req, res)
+app.post('/api/wishlist/:wishlistid/article', (req, res) => {
+  const wishlistid = req.params.wishlistid
   const product = req.body
   if (wishlistid != undefined && product != undefined && product.productId != undefined) {
     wishlists.addToWishlist(wishlistid, product)
@@ -36,8 +34,8 @@ app.post('/api/wishlist', (req, res) => {
   }
 })
 
-app.delete('/api/wishlist/:productId', (req, res) => {
-  const wishlistid = getOrCreateWishlistid(req, res)
+app.delete('/api/wishlist/:wishlistid/article/:productId', (req, res) => {
+  const wishlistid = req.params.wishlistid
   const productId = req.params.productId
   if (productId == undefined) {
     res.status(400).send()
@@ -51,21 +49,8 @@ app.get('/api/*', function(req, res){
   res.status(404).send("what???")
 });
 
-function getOrCreateWishlistid(req, res) {
-  var wishlistId = req.cookies.wishlistid
-  if (wishlistId == undefined) {
-    var randomNumber = Math.random().toString();
-    randomNumber = randomNumber.substring(2, randomNumber.length);
-    res.cookie('wishlistid', randomNumber, { maxAge: 900000, httpOnly: true });
-    wishlistId = randomNumber
-    console.log("New ID: " + wishlistId)
-  }
-  return wishlistId
-}
-
 // Main page
-app.use('/', (req, res) => {
-  getOrCreateWishlistid(req, res)
+app.get('/*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '..', 'build', 'index.html'));
 });
 

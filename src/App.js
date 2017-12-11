@@ -104,7 +104,7 @@ class SearchResults extends Component {
           const priceObj = JSON.parse(value.separatedSalePrice)
           const currency = priceObj.filter(obj => obj.isCurrency)[0].value
           const price = priceObj.filter(obj => !obj.isCurrency)[0].value
-          const isOnWishlist = wishedItems.filter(obj => obj.productId == value.productId).length != 0
+          const isOnWishlist = wishedItems.filter(obj => obj.productId === value.productId).length !== 0
           function handleClick(e) {
             wishlistHandler(value)
             e.preventDefault()
@@ -146,7 +146,8 @@ class App extends Component {
     super(props)
     this.state = {
       queryItems: [],
-      wishedItems: []
+      wishedItems: [],
+      wishlistid: localStorage.getItem('wishlistid')
     }
 
     this.onSearchChange = this.onSearchChange.bind(this);
@@ -154,24 +155,32 @@ class App extends Component {
     this.removeFromWishlist = this.removeFromWishlist.bind(this);
 
     this.search = this.search.bind(this);
+    this.fetchSearch = this.fetchSearch.bind(this);
 
     this.refreshWishlist()
-    this.search(this.props.match.params.query ? this.props.match.params.query : "nmd" )
+    this.fetchSearch(this.props.match.params.query ? this.props.match.params.query : "nmd" )
+  }
+
+  componentDidMount() {
+    const wishlistId = this.state.wishlistid
+    if (!wishlistId) {
+      var randomNumber = Math.random().toString();
+      randomNumber = randomNumber.substring(2, randomNumber.length);
+      localStorage.setItem('wishlistid', randomNumber)
+      console.log("New ID: " + randomNumber)
+      this.setState({wishlistid: randomNumber})
+    }
   }
 
   refreshWishlist() {
-    console.log("Refreshing wishlist...")
-    fetch('/api/wishlist', {method: 'GET',
-        credentials: 'same-origin'
-      })
+    fetch('/api/wishlist/' + this.state.wishlistid)
       .then(data => data.json())
       .then(parsedData => {
-        console.log("Wishlist: " + JSON.stringify(parsedData))
         this.setState({wishedItems: parsedData})
       })
   }
 
-  search(query) {
+  fetchSearch(query) {
     fetch('https://www.adidas.co.uk/api/suggestions/' + query)
     .then(data => { return  data.json() })
     .then(finalData => {
@@ -181,21 +190,25 @@ class App extends Component {
     })
   }
 
+  search(query) {
+    this.props.history.push('/' + query);
+    this.fetchSearch(query)
+  }
+
   onSearchChange(items) {
     this.setState({queryItems: items})
   }
 
   addToWishlist(product) {
     const productId = product.productId
-    const hasItem = this.state.wishedItems.filter( (o) => o.productId == product.productId ).length > 0
+    const hasItem = this.state.wishedItems.filter( (o) => o.productId === product.productId ).length > 0
+    console.log("WishlistID: " + this.state.wishlistid)
     if (!hasItem) {
-      fetch('/api/wishlist', {method: 'POST',
-          credentials: 'same-origin',
+      fetch('/api/wishlist/' + this.state.wishlistid + "/article", {method: 'POST',
           body: JSON.stringify(product),
           headers: { 'Content-Type': 'application/json' }
         })
         .then(parsedData => {
-          console.log("Good! " + parsedData)
           this.refreshWishlist()
         })
     }
@@ -203,11 +216,9 @@ class App extends Component {
 
   removeFromWishlist(product) {
     const productId = product.productId
-    fetch('/api/wishlist/' + productId, {method: 'DELETE',
-        credentials: 'same-origin'
-      })
+    fetch('/api/wishlist/' + this.state.wishlistid + "/article/" + productId,
+      {method: 'DELETE'})
       .then(parsedData => {
-        console.log("Good! " + parsedData)
         this.refreshWishlist()
       })
   }

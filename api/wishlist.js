@@ -13,10 +13,7 @@ class Wishlist {
 
   removeFromWishlist(userId, productId) {
     if (this.wishlists.hasOwnProperty(userId)) {
-      console.log("Deleting: " + this.wishlists[userId][productId])
         delete this.wishlists[userId][productId]
-    } else {
-      console.log(" Could not find userid")
     }
   }
 
